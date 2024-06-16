@@ -10,19 +10,13 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/newsfeed")
 public class NewsfeedController {
 
     private final NewsfeedService newsfeedService;
@@ -35,10 +29,10 @@ public class NewsfeedController {
      * @param contentRequestDto
      * @return
      */
-    @PostMapping("/newsfeed")
+    @PostMapping
     public ResponseEntity<NewsfeedResponseDto> postNewsfeed(
-        @RequestHeader("Authorization") String token,
-        @Valid @RequestBody NewsfeedRequestDto contentRequestDto) {
+            @RequestHeader("Authorization") String token,
+            @Valid @RequestBody NewsfeedRequestDto contentRequestDto) {
 
         return newsfeedService.postContent(token, contentRequestDto);
     }
@@ -54,30 +48,22 @@ public class NewsfeedController {
      * @param endTime   최종 날짜 (required = false)
      * @return
      */
-    @GetMapping("/newsfeed")
+    @GetMapping
     public ResponseEntity<Page<NewsfeedResponseDto>> getAllNewsfeed(
-        @RequestParam("page") int page,
-        @RequestParam("size") int size,
-        @RequestParam("isASC") boolean isASC,
-        @RequestParam("like") boolean like,
-        @RequestParam(required = false) LocalDateTime startTime,
-        @RequestParam(required = false) LocalDateTime endTime) {
+            @RequestParam("page") int page,
+            @RequestParam("size") int size,
+            @RequestParam("isASC") boolean isASC,
+            @RequestParam("like") boolean like,
+            @RequestParam(required = false) LocalDateTime startTime,
+            @RequestParam(required = false) LocalDateTime endTime) {
 
         return newsfeedService.getAllContents(page, size, isASC, like, startTime, endTime);
     }
 
-    /**
-     * 뉴스피드 수정
-     *
-     * @param token
-     * @param id
-     * @param contentRequestDto
-     * @return
-     */
-    @PutMapping("newsfeed/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<NewsfeedResponseDto> putNewsfeed(
-        @RequestHeader("Authorization") String token, @PathVariable Long id,
-        @Valid @RequestBody NewsfeedRequestDto contentRequestDto) {
+            @RequestHeader("Authorization") String token, @PathVariable Long id,
+            @Valid @RequestBody NewsfeedRequestDto contentRequestDto) {
 
         return newsfeedService.putContent(token, id, contentRequestDto);
     }
@@ -89,9 +75,9 @@ public class NewsfeedController {
      * @param id
      * @return
      */
-    @DeleteMapping("newsfeed/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Long> deleteNewsfeed(@RequestHeader("Authorization") String token,
-        @PathVariable Long id) {
+                                               @PathVariable Long id) {
         return newsfeedService.deleteContent(token, id);
     }
 
@@ -102,18 +88,18 @@ public class NewsfeedController {
      * @param id
      * @return
      */
-    @PostMapping("/newsfeed/media")
+    @PostMapping("/media")
     public ResponseEntity<String> uploadImageToNewsfeed(
-        @RequestHeader("Authorization") String token, @RequestParam("file") MultipartFile file,
-        @RequestParam Long id) {
+            @RequestHeader("Authorization") String token, @RequestParam("file") MultipartFile file,
+            @RequestParam Long id) {
 
         return s3UploadService.uploadImageToNewsfeed(token,id, file);
     }
 
-    @PutMapping("/newsfeed/media")
+    @PutMapping("/media")
     public ResponseEntity<String> updateImageToNewsfeed(
-        @RequestHeader("Authorization") String token, @RequestParam("file") MultipartFile file,
-        @RequestParam Long id, @RequestParam Long fileid) {
+            @RequestHeader("Authorization") String token, @RequestParam("file") MultipartFile file,
+            @RequestParam Long id, @RequestParam Long fileid) {
 
         return s3UploadService.updateImageToNewsfeed(token,file, id, fileid);
     }

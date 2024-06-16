@@ -9,7 +9,6 @@ import com.sparta.oneandzerobest.comment.entity.Comment;
 import com.sparta.oneandzerobest.comment.repository.CommentRepository;
 import com.sparta.oneandzerobest.exception.CommentNotFoundException;
 import com.sparta.oneandzerobest.exception.UnauthorizedException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,22 +22,16 @@ import java.util.stream.Collectors;
 @Service
 public class CommentService {
 
-    @Autowired
-    private CommentRepository commentRepository;
+    private final CommentRepository commentRepository;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
-    @Autowired
-    private UserRepository userRepository;
+    public CommentService(CommentRepository commentRepository, UserRepository userRepository, JwtUtil jwtUtil) {
+        this.commentRepository = commentRepository;
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+    }
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    /**
-     * 뉴스피드에 댓글을 추가
-     * @param newsfeedId 뉴스피드 ID
-     * @param requestDto 댓글 작성 요청 DTO
-     * @param token JWT 토큰
-     * @return 생성된 댓글의 응답 DTO
-     */
     @Transactional
     public CommentResponseDto addComment(Long newsfeedId, CommentRequestDto requestDto, String token) {
         Long userId = validateToken(token);

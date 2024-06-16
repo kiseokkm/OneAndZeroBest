@@ -15,12 +15,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@Service
 @RequiredArgsConstructor
 public class NewsfeedService {
 
@@ -35,27 +34,20 @@ public class NewsfeedService {
      * @return
      */
     public ResponseEntity<NewsfeedResponseDto> postContent(String token,
-        NewsfeedRequestDto contentRequestDto) {
-
+                                                           NewsfeedRequestDto contentRequestDto) {
         try {
-            // 토큰으로 유저 정보 가져오기
             User user = getUserFormToken(token);
             if (user == null) {
                 throw new IllegalArgumentException("Invalid token");
             }
             Long userid = user.getId();
-
             Newsfeed newsfeed = new Newsfeed(userid, contentRequestDto.getContent());
             newsfeedRepository.save(newsfeed);
-
             NewsfeedResponseDto newsfeedResponseDto = new NewsfeedResponseDto(newsfeed);
-
             return ResponseEntity.ok(newsfeedResponseDto);
         } catch (ConstraintViolationException e) {
-
             return ResponseEntity.badRequest().body(null);
         }
-
     }
 
     /**
@@ -70,42 +62,19 @@ public class NewsfeedService {
      * @return
      */
     public ResponseEntity<Page<NewsfeedResponseDto>> getAllContents(int page, int size,
-        boolean isASC, boolean like, LocalDateTime startTime, LocalDateTime endTime) {
-
+                                                                    boolean isASC, boolean like, LocalDateTime startTime, LocalDateTime endTime) {
         try {
-            // 정렬 ( 오름차순 / 내림차순)
-            Sort.Direction direction = isASC ? Direction.ASC : Direction.DESC;
-
-            // 좋아요 / 생성일
-            Sort sort;
-            if(!like){
-                sort = Sort.by(direction, "createdAt");
-            }
-            else{
-                sort = Sort.by(direction,"likeCount");
-            }
-
+            Sort.Direction direction = isASC ? Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort sort = like ? Sort.by(direction, "likeCount") : Sort.by(direction, "createdAt");
             Pageable pageable = PageRequest.of(page, size, sort);
-
-            // 모든 게시글 조회
-            Page<Newsfeed> newsfeedList;
-
-            // 전체검색 / 기간별 검색
-            if (startTime == null) {
-                newsfeedList = newsfeedRepository.findAll(pageable);
-            } else {
-                newsfeedList = newsfeedRepository.findAllByCreateAtBetween(startTime, endTime,
-                    pageable);
-            }
-
-            Page<NewsfeedResponseDto> newsfeedResponseDtoPage = newsfeedList.map(
-                NewsfeedResponseDto::new);
+            Page<Newsfeed> newsfeedList = (startTime == null)
+                    ? newsfeedRepository.findAll(pageable)
+                    : newsfeedRepository.findAllByCreateAtBetween(startTime, endTime, pageable);
+            Page<NewsfeedResponseDto> newsfeedResponseDtoPage = newsfeedList.map(NewsfeedResponseDto::new);
             return ResponseEntity.ok(newsfeedResponseDtoPage);
         } catch (RuntimeException e) {
-
             return ResponseEntity.badRequest().body(null);
         }
-
     }
 
     /**
@@ -118,28 +87,21 @@ public class NewsfeedService {
      */
     @Transactional
     public ResponseEntity<NewsfeedResponseDto> putContent(String token, Long contentId,
-        NewsfeedRequestDto contentRequestDto) {
-
+                                                          NewsfeedRequestDto contentRequestDto) {
         try {
-
             Newsfeed newsfeed = newsfeedRepository.findById(contentId)
-                .orElseThrow(() -> new RuntimeException("Content not found"));
-
+                    .orElseThrow(() -> new RuntimeException("Content not found"));
             User user = getUserFormToken(token);
-            // 유저가 없거나, 뉴스피드의 userid와 user의 id가 일치하지 않는다면
             if (user == null || !Objects.equals(newsfeed.getUserid(), user.getId())) {
                 throw new IllegalArgumentException("Invalid token");
             }
             newsfeed.setContent(contentRequestDto.getContent());
-
-
+            newsfeedRepository.save(newsfeed);
+            return ResponseEntity.ok(new NewsfeedResponseDto(newsfeed));
         } catch (ConstraintViolationException e) {
             return ResponseEntity.badRequest().body(null);
         }
-
-        return null;
     }
-
 
     /**
      * 게시글 삭제
@@ -147,15 +109,12 @@ public class NewsfeedService {
      * @param contentId
      * @return
      */
+    @Transactional
     public ResponseEntity<Long> deleteContent(String token, Long contentId) {
-
         try {
-
             Newsfeed newsfeed = newsfeedRepository.findById(contentId)
-                .orElseThrow(() -> new RuntimeException("Content not found"));
-
+                    .orElseThrow(() -> new RuntimeException("Content not found"));
             User user = getUserFormToken(token);
-            // 유저가 없거나, 뉴스피드의 userid와 user의 id가 일치하지 않는다면
             if (user == null || !Objects.equals(user.getId(), newsfeed.getUserid())) {
                 throw new IllegalArgumentException("Invalid token");
             }
