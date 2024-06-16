@@ -1,9 +1,11 @@
 package com.sparta.oneandzerobest.newsfeed.dto;
 
 import com.sparta.oneandzerobest.newsfeed.entity.Newsfeed;
-import lombok.Getter;
+import lombok.*;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class NewsfeedResponseDto {
     private Long userid;
     private String content;

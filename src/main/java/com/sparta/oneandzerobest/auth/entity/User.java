@@ -13,9 +13,11 @@ import java.util.Collections;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "users")
-public class User implements UserDetails { // Spring Security의 UserDetails
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

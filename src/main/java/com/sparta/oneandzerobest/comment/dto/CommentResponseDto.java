@@ -1,7 +1,7 @@
 package com.sparta.oneandzerobest.comment.dto;
 
 import com.sparta.oneandzerobest.comment.entity.Comment;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.format.DateTimeFormatter;
 
@@ -10,13 +10,15 @@ import java.time.format.DateTimeFormatter;
  * 이 DTO는 댓글의 ID, 뉴스피드 ID, 작성자 ID, 내용, 생성 및 수정 시간을 포함
  */
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CommentResponseDto {
-    private Long id;  // 댓글 ID
-    private Long newsfeedId;  // 뉴스피드 ID
-    private Long userId;  // 댓글 작성자 ID
-    private String content;  // 댓글 내용
-    private String createdAt;  // 댓글 생성 시간
-    private String modifiedAt;  // 댓글 수정 시간
+    private Long id;
+    private Long newsfeedId;
+    private Long userId;
+    private String content;
+    private String createdAt;
+    private String modifiedAt;
 
     public CommentResponseDto(Comment comment) {
         this.id = comment.getId();
