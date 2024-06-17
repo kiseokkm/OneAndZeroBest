@@ -48,9 +48,10 @@ public class UserServiceImpl implements UserService {
      * 회원가입: ID, PW, Email
      *
      * @param signupRequest
+     * @return
      */
     @Override
-    public void signup(SignupRequest signupRequest) {
+    public User signup(SignupRequest signupRequest) {
         String authId = signupRequest.getUsername();
         String password = signupRequest.getPassword();
         String email = signupRequest.getEmail();
@@ -70,7 +71,7 @@ public class UserServiceImpl implements UserService {
             if (user.getStatusCode().equals(UserStatus.UNVERIFIED)) {
                 // 인증 전 상태일 때는 이메일을 업데이트하고 새로운 인증 이메일을 보냄
                 updateEmail(signupRequest);
-                return;
+                return user;
             }
             throw new InfoNotCorrectedException("중복된 사용자 ID가 존재합니다.");
         }
@@ -84,6 +85,7 @@ public class UserServiceImpl implements UserService {
         User user = new User(authId, encodedPassword, signupRequest.getUsername(), email, UserStatus.UNVERIFIED);
         userRepository.save(user);
         sendVerificationEmail(user);
+        return user;
     }
 
     /**

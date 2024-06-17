@@ -5,14 +5,12 @@ import com.sparta.oneandzerobest.auth.repository.UserRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -24,24 +22,22 @@ class UserServiceTest {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
-    @MockBean
+    @Autowired
     private UserRepository userRepository;
 
-    @MockBean
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private User user;
     private final String username = "testUser1";
     private final String email = "test1@Email.com";
     private final String password = "testPassword1!";
-    private User user;
 
     @BeforeEach
     void setUp() {
-        user = new User(username, "encodedPassword", "testName", email, UserStatus.UNVERIFIED);
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches(password, user.getPassword())).thenReturn(true);
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        userRepository.deleteAll(); // 모든 사용자 데이터 초기화
+        user = new User(username, passwordEncoder.encode(password), "testName", email, UserStatus.UNVERIFIED);
+        userRepository.save(user);
     }
 
     @Test
@@ -49,14 +45,14 @@ class UserServiceTest {
     void testSignup() {
         // Given
         SignupRequest signupRequest = new SignupRequest(username, password, email, false, "");
-        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
 
         // When
-        userService.signup(signupRequest);
+        User result = userService.signup(signupRequest);
 
         // Then
-        verify(userRepository).save(any(User.class));
-        assertDoesNotThrow(() -> userService.signup(signupRequest));
+        assertNotNull(result);
+        assertEquals(username, result.getUsername());
+        assertTrue(passwordEncoder.matches(password, result.getPassword())); // 비밀번호 확인
     }
 
     @Test
@@ -79,6 +75,7 @@ class UserServiceTest {
         // Given
         LoginRequest loginRequest = new LoginRequest(username, password);
         user.updateStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
 
         // When
         LoginResponse loginResponse = userService.login(loginRequest);
@@ -94,12 +91,14 @@ class UserServiceTest {
         // Given
         user.updateStatus(UserStatus.ACTIVE);
         user.setRefreshToken("someRefreshToken");
+        userRepository.save(user);
 
         // When
         userService.logout(username, "someAccessToken", "someRefreshToken");
 
         // Then
-        assertNull(user.getRefreshToken());
+        User updatedUser = userRepository.findById(user.getId()).get();
+        assertNull(updatedUser.getRefreshToken());
     }
 
     @Test
@@ -107,13 +106,15 @@ class UserServiceTest {
     void testWithdraw() {
         // Given
         user.updateStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
 
         // When
         userService.withdraw(username, password, "someAccessToken", "someRefreshToken");
 
         // Then
-        assertEquals(UserStatus.WITHDRAWN, user.getStatusCode());
-        assertNull(user.getRefreshToken());
+        User updatedUser = userRepository.findById(user.getId()).get();
+        assertEquals(UserStatus.WITHDRAWN, updatedUser.getStatus());
+        assertNull(updatedUser.getRefreshToken());
     }
 
     @Test

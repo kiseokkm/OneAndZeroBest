@@ -5,12 +5,10 @@ import com.sparta.oneandzerobest.auth.entity.LoginRequest;
 import com.sparta.oneandzerobest.auth.entity.LoginResponse;
 import com.sparta.oneandzerobest.auth.entity.SignupRequest;
 import com.sparta.oneandzerobest.auth.entity.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public interface UserService {
     // 회원가입
-    void signup(SignupRequest signupRequest);
+    User signup(SignupRequest signupRequest);
 
     // 로그인
     LoginResponse login(LoginRequest loginRequest);

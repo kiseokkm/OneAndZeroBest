@@ -43,7 +43,7 @@ public class JwtUtil {
 
     /**
      * 사용자 명으로 리프레시 토큰 발급
-      * @param username
+     * @param username
      * @return
      */
     public static String createRefreshToken(String username) {

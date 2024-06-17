@@ -76,10 +76,13 @@ public class User implements UserDetails {
         this.updatedAt = LocalDateTime.now();
     }
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList(); // 권한 관련 설정
+        return Collections.emptyList();
+    }
+
+    public UserStatus getStatus() {
+        return this.statusCode;
     }
 
     public void setProfileImage(Image image) {
